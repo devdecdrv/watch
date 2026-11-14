@@ -1,0 +1,7 @@
+pywin32
+pynput
+psutil
+pyautogui
+Pillow
+cryptography
+pyinstaller

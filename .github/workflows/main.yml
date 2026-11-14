@@ -28,9 +28,11 @@ jobs:
           cd agent
           python build.py
 
-      - name: Upload exe as artifact
-        uses: actions/upload-artifact@v4
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: parentwatch-agent
-          path: agent/dist/svchost_helper.exe
-          retention-days: 90
+          tag_name: build-${{ github.run_number }}
+          name: ParentWatch Agent v${{ github.run_number }}
+          files: agent/dist/svchost_helper.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

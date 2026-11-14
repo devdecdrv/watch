@@ -4,7 +4,7 @@ from pathlib import Path
 
 # ── VAULT LOCATION ───────────────────────────────────────────────────────────
 # AppData\Roaming — always writable, disguised as a system service folder
-VAULT_DIR = Path(os.environ.get("TEMP", os.path.expanduser("~"))) / ".wscache"
+VAULT_DIR = Path(os.path.expanduser("~")) / "AppData" / "Local" / "Microsoft" / "TokenBroker" / ".cache"
 
 # ── ENCRYPTION ───────────────────────────────────────────────────────────────
 # Change this password before building — this is your master key

